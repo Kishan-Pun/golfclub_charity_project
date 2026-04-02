@@ -15,7 +15,7 @@ export default function Navbar() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
-    router.push("/signup");
+    router.push("/login");
   };
 
   useEffect(() => {
