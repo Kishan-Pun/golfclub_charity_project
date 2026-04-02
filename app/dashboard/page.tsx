@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import Navbar from "@/components/Navbar";
+import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
