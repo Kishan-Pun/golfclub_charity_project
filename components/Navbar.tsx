@@ -10,6 +10,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -18,17 +19,31 @@ export default function Navbar() {
   };
 
   useEffect(() => {
-    // 🔥 1. Get current user
     const getUser = async () => {
       const { data } = await supabase.auth.getUser();
-      setUser(data.user);
+      const user = data.user;
+
+      setUser(user);
+
+      if (user?.email === "admin@gmail.com") {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
     };
 
     getUser();
 
-    // 🔥 2. Listen to auth changes (THIS WAS MISSING)
     const { data: listener } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user || null);
+      const user = session?.user || null;
+
+      setUser(user);
+
+      if (user?.email === "admin@gmail.com") {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
     });
 
     return () => {
@@ -66,6 +81,12 @@ export default function Navbar() {
             </Link>
           ))}
 
+          {isAdmin && (
+            <Link href="/admin" className="text-purple-600 font-semibold">
+              Admin
+            </Link>
+          )}
+
           {user && (
             <button
               onClick={handleLogout}
@@ -99,6 +120,16 @@ export default function Navbar() {
               {link.name}
             </Link>
           ))}
+
+          {isAdmin && (
+            <Link
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="block text-purple-600 font-semibold"
+            >
+              Admin
+            </Link>
+          )}
 
           {user && (
             <button

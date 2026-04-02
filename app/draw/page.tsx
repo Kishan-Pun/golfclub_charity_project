@@ -4,121 +4,50 @@ import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 
 export default function DrawPage() {
-  const [result, setResult] = useState("");
+  const [draw, setDraw] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkUser = async () => {
-      const { data } = await supabase.auth.getUser();
+    const fetchDraw = async () => {
+      const { data } = await supabase
+        .from("draws")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      if (!data.user) {
-        window.location.href = "/login";
-      } else {
-        setLoading(false);
-      }
+      setDraw(data);
+      setLoading(false);
     };
 
-    checkUser();
+    fetchDraw();
   }, []);
 
-  const generateDraw = async () => {
-    // Generate 5 random numbers (1–45)
-    const numbers = Array.from(
-      { length: 5 },
-      () => Math.floor(Math.random() * 45) + 1,
-    );
-
-    await supabase.from("draws").insert({
-      draw_date: new Date(),
-      numbers,
-      status: "completed",
-    });
-
-    alert("Draw generated!");
-  };
-
-  const checkMatches = async () => {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) return;
-
-    const userId = userData.user.id;
-
-    // Get scores
-    const { data: scores } = await supabase
-      .from("scores")
-      .select("score")
-      .eq("user_id", userId);
-
-    // Get latest draw
-    const { data: draws } = await supabase
-      .from("draws")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(1);
-
-    if (!draws || draws.length === 0) return;
-
-    const draw = draws[0];
-    const drawNumbers = draw.numbers;
-
-    const userScores = (scores || []).map((s) => s.score);
-
-    const matches = userScores.filter((n) => drawNumbers.includes(n));
-
-    const matchCount = matches.length;
-
-    let resultText = "No win";
-    let prize = 0;
-
-    if (matchCount === 5) {
-      resultText = "🎉 Jackpot!";
-      prize = 1000;
-    } else if (matchCount === 4) {
-      resultText = "🔥 Big Win!";
-      prize = 500;
-    } else if (matchCount === 3) {
-      resultText = "👍 Small Win";
-      prize = 100;
-    }
-
-    // ✅ Save winner if any match
-    if (matchCount >= 3) {
-      await supabase.from("winners").insert({
-        user_id: userId,
-        draw_id: draw.id,
-        match_count: matchCount,
-        prize,
-        status: "pending",
-      });
-    }
-
-    setResult(`Matched ${matchCount} → ${resultText}`);
-  };
-
-  if (loading) {
-    return <p className="text-center mt-10">Checking auth...</p>;
-  }
+  if (loading) return <p className="text-center mt-10">Loading...</p>;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-      <button
-        onClick={generateDraw}
-        className="bg-purple-600 text-white p-4 rounded-lg"
-      >
-        Generate Draw
-      </button>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-6">
+      <h1 className="text-2xl font-bold">🎯 Latest Draw</h1>
 
-      <button
-        onClick={checkMatches}
-        className="bg-green-600 text-white p-4 rounded-lg"
-      >
-        Check Matches
-      </button>
+      {draw ? (
+        <div className="bg-white p-6 rounded-xl shadow text-center">
+          <p className="text-gray-500 mb-2">
+            {new Date(draw.draw_date).toLocaleDateString()}
+          </p>
 
-      {result && (
-        <div className="text-black bg-gray-200 p-4 rounded shadow mt-4 text-center">
-          {result}
+          <div className="flex gap-3 justify-center">
+            {draw.numbers.map((num: number, i: number) => (
+              <div
+                key={i}
+                className="w-12 h-12 flex items-center justify-center bg-blue-600 text-white rounded-full text-lg font-bold"
+              >
+                {num}
+              </div>
+            ))}
+          </div>
         </div>
+      ) : (
+        <p>No draw yet</p>
       )}
     </div>
   );
