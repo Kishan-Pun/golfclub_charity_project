@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 export default function ScorePage() {
   const [score, setScore] = useState("");
   const [scores, setScores] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchScores = async () => {
     const user = await supabase.auth.getUser();
@@ -20,6 +21,20 @@ export default function ScorePage() {
 
     setScores(data || []);
   };
+
+  useEffect(() => {
+  const checkUser = async () => {
+    const { data } = await supabase.auth.getUser();
+
+    if (!data.user) {
+      window.location.href = "/login";
+    } else {
+      setLoading(false);
+    }
+  };
+
+  checkUser();
+}, []);
 
   useEffect(() => {
     fetchScores();
@@ -82,6 +97,10 @@ export default function ScorePage() {
     setScore("");
     fetchScores();
   };
+
+  if (loading) {
+  return <p className="text-center mt-10">Checking auth...</p>;
+}
 
   return (
     <div className="min-h-screen bg-gray-100">

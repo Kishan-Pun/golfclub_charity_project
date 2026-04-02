@@ -1,10 +1,25 @@
 "use client";
 
 import { supabase } from "@/lib/supabase";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function DrawPage() {
   const [result, setResult] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser();
+
+      if (!data.user) {
+        window.location.href = "/login";
+      } else {
+        setLoading(false);
+      }
+    };
+
+    checkUser();
+  }, []);
 
   const generateDraw = async () => {
     // Generate 5 random numbers (1–45)
@@ -79,6 +94,10 @@ export default function DrawPage() {
 
     setResult(`Matched ${matchCount} → ${resultText}`);
   };
+
+  if (loading) {
+    return <p className="text-center mt-10">Checking auth...</p>;
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4">

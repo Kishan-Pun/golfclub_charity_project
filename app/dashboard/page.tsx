@@ -12,6 +12,7 @@ export default function Dashboard() {
   const [total, setTotal] = useState(0);
   const [charityAmount, setCharityAmount] = useState(0);
   const [selectedCharity, setSelectedCharity] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
     const { data: userData } = await supabase.auth.getUser();
@@ -70,8 +71,28 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchData();
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser();
+
+      if (!data.user) {
+        window.location.href = "/login"; // redirect
+      } else {
+        fetchData();
+      }
+
+      setLoading(false);
+    };
+
+    checkUser();
   }, []);
+
+  if (loading) {
+  return (
+    <p className="text-center mt-10">
+      Checking authentication...
+    </p>
+  );
+}
 
   return (
     <div className="min-h-screen bg-gray-100">

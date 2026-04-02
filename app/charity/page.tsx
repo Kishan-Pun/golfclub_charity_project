@@ -9,6 +9,21 @@ export default function CharityPage() {
   const [selected, setSelected] = useState("");
   const [percentage, setPercentage] = useState(10);
   const [current, setCurrent] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser();
+
+      if (!data.user) {
+        window.location.href = "/login";
+      } else {
+        setLoading(false);
+      }
+    };
+
+    checkUser();
+  }, []);
 
   // 🔥 Fetch charities list
   const fetchCharities = async () => {
@@ -65,6 +80,9 @@ export default function CharityPage() {
     fetchUserCharity();
   };
 
+  if (loading) {
+    return <p className="text-center mt-10">Checking auth...</p>;
+  }
   return (
     <div className="text-gray-600 min-h-screen bg-gray-100">
       <div className="md:p-10 max-w-xl mx-auto space-y-6">

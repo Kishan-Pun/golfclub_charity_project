@@ -1,8 +1,25 @@
 "use client";
 
 import { supabase } from "@/lib/supabase";
+import { useEffect, useState } from "react";
 
 export default function SubscriptionPage() {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser();
+
+      if (!data.user) {
+        window.location.href = "/login";
+      } else {
+        setLoading(false);
+      }
+    };
+
+    checkUser();
+  }, []);
+
   const subscribe = async (plan: string) => {
     const { data: userData } = await supabase.auth.getUser();
 
@@ -27,6 +44,10 @@ export default function SubscriptionPage() {
 
     alert("Subscribed successfully!");
   };
+
+  if (loading) {
+    return <p className="text-center mt-10">Checking auth...</p>;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
